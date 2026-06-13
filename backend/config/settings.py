@@ -195,6 +195,10 @@ LLM_PROVIDERS = {
         ),
         "api_key": os.environ.get("GEMINI_API_KEY", ""),
         "model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
+        # gemini-2.5-flash "thinks" by default (~30s grades). Grading is a
+        # structured-extraction task, not deep reasoning, so cap it. "low" keeps
+        # quality while cutting most of the latency; "none" disables thinking.
+        "reasoning_effort": os.environ.get("GEMINI_REASONING_EFFORT", "low"),
         "requires_key": True,
     },
     "openai": {

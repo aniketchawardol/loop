@@ -22,6 +22,13 @@ FRAUD_WEIGHTS = {
 # dHash similarity at/above this looks like "same item"; below ramps up suspicion.
 _SIM_OK = 0.6
 
+# A real VLM that is confident the returned item is NOT the listed product is a
+# near-conclusive fraud signal. We floor the blended score so weaker, easily
+# fooled sources (a colour-blind hash, a benign reason, clean history) can't
+# dilute a clear wrong-item substitution into a deceptively low number.
+_WRONG_ITEM_FLOOR = 0.6
+_WRONG_ITEM_CONF = 0.6
+
 
 def _clamp(v, lo=0.0, hi=1.0):
     try:
@@ -109,6 +116,20 @@ def blend(vlm, similarity, metadata, history, claim=None):
     fraud_score = (
         sum(FRAUD_WEIGHTS[k] * v for k, v in active.items()) / wsum if wsum else 0.0
     )
+
+    # Decisive override: a confident real VLM reporting a WRONG item (e.g. a
+    # different colour/model than listed) is near-conclusive fraud. The weighted
+    # blend can mask it — perceptual hashes are colour-blind, the reason may be
+    # benign, history may be clean — so we floor the score. Everything below the
+    # floor still goes through the blend; no single source is trusted outright.
+    decisive_wrong_item = (
+        vlm_is_real
+        and not matches
+        and _clamp(vlm.get("confidence"), 0.0, 1.0) >= _WRONG_ITEM_CONF
+    )
+    if decisive_wrong_item:
+        fraud_score = max(fraud_score, _WRONG_ITEM_FLOOR)
+
     fraud_score = round(_clamp(fraud_score), 3)
 
     # --- confidence: data availability + cross-source agreement + VLM self-conf ---
@@ -144,6 +165,7 @@ def blend(vlm, similarity, metadata, history, claim=None):
             "signals": {k: round(v, 3) for k, v in signals.items()},
             "weights": {k: FRAUD_WEIGHTS[k] for k in active},
             "reason_mismatch_note": rm_note,
+            "decisive_wrong_item": decisive_wrong_item,
         },
         "confidence": {
             "value": confidence,

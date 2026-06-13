@@ -41,6 +41,7 @@ def _build_openai_compat(name: str):
         api_key=cfg.get("api_key", ""),
         model=cfg.get("model", ""),
         timeout=getattr(settings, "GRADING_VLM_TIMEOUT", 30.0),
+        reasoning_effort=cfg.get("reasoning_effort", ""),
     )
 
 
