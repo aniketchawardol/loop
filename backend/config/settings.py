@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "marketplace",
     "sellerportal",
     "facility",
+    "greencredits",
 ]
 
 MIDDLEWARE = [

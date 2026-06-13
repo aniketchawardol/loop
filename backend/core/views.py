@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -8,7 +9,13 @@ from .models import Roles, User
 
 
 def _user_payload(user):
-    return {"id": user.id, "username": user.username, "role": user.role}
+    payload = {"id": user.id, "username": user.username, "role": user.role}
+    try:
+        # green_credits is a OneToOne relation created by greencredits app; include balance if present
+        payload["green_credits"] = {"balance": user.green_credits.balance}
+    except Exception:
+        payload["green_credits"] = {"balance": 0}
+    return payload
 
 
 @api_view(["POST"])

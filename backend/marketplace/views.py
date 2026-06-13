@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from catalog.models import ItemUnit, UnitStates
 from core.uploads import save_photos
 from services import ai
+from greencredits.logic import award_credits
 
 from .models import (
     Listing,
@@ -52,6 +53,20 @@ def place_order(request):
         unit.owner = request.user
         unit.transition(UnitStates.SOLD, actor=request.user)
         order = Order.objects.create(buyer=request.user, listing=listing)
+        # Green credits: award for pre-loved purchase
+        if listing.source == ListingSources.USER_RESALE:
+            award_credits(request.user, 20, "BUY_USER_RESALE", "Bought pre-loved (user resale)", order.id)
+            # Emit a pickup scheduled event for USER_RESALE orders
+            from catalog.models import UnitEvent
+
+            UnitEvent.objects.create(
+                unit=unit,
+                type="PICKUP_SCHEDULED",
+                actor=request.user,
+                payload={"eta": "tomorrow 9am", "note": "Pickup scheduled for resale order"},
+            )
+        elif listing.source == ListingSources.FACILITY_RELIST:
+            award_credits(request.user, 25, "BUY_FACILITY_RELIST", "Bought pre-loved (facility relist)", order.id)
     return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
 
@@ -101,6 +116,9 @@ def request_return(request, pk):
         photos=photo_paths,
     )
     order.listing.unit.transition(UnitStates.RETURN_PENDING, actor=request.user)
+    # Green credits: untouched return
+    if claimed:
+        award_credits(request.user, 5, "UNTOUCHED_RETURN", "Untouched return", order.id)
     return Response(OrderSerializer(order).data)
 
 
@@ -158,6 +176,7 @@ def resale(request):
             {"detail": "You no longer own this item."},
             status=status.HTTP_409_CONFLICT,
         )
+
     if unit.listings.filter(
         state__in=[ListingStates.ACTIVE, ListingStates.RESERVED]
     ).exists():
@@ -192,6 +211,19 @@ def resale(request):
         lister=request.user,
     )
     unit.transition(UnitStates.RELISTED, actor=request.user, listing_id=listing.id)
-    # Order is now final: can't be returned or resold a second time.
     order.transition(OrderStates.SETTLED, actor=request.user, resold=True)
+    # Green credits: award for reselling
+    award_credits(request.user, 30, "RESELL", f"Resold {product.title}", listing.id)
+
+    # Emit payout released event (demo): 92% payout to Amazon Pay
+    payout_amount = int(listing.price * 0.92)
+    from catalog.models import UnitEvent
+
+    UnitEvent.objects.create(
+        unit=unit,
+        type="PAYOUT_RELEASED",
+        actor=request.user,
+        payload={"amount": payout_amount, "fee": int(listing.price * 0.08)},
+    )
+
     return Response(ListingSerializer(listing).data, status=status.HTTP_201_CREATED)

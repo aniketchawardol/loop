@@ -2,26 +2,42 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { useToast } from "../components/Toast";
 
 export default function ProductPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { reload } = useAuth();
   const nav = useNavigate();
   const [p, setP] = useState(null);
-  const [msg, setMsg] = useState("");
+  const { push } = useToast();
 
   const load = () => api.get(`/products/${id}`).then(setP);
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+  }, [id]);
 
   const buy = async (listingId) => {
     if (!user) return nav("/login");
-    setMsg("");
+    const prevBal = user?.green_credits?.balance || 0;
     try {
       await api.post("/orders/place", { listing_id: listingId });
-      setMsg("Order placed! Check Orders tab.");
+      push("Order placed — check Orders tab", "success");
       load();
+      // refresh auth payload to update green credits counter in header
+      try {
+        await reload();
+      } catch (e) {
+        /* ignore */
+      }
+      try {
+        const me = await api.get("/auth/me");
+        const newBal = me.user?.green_credits?.balance || 0;
+        if (newBal > prevBal)
+          push(`+${newBal - prevBal} green credits added`, "success");
+      } catch (e) {}
     } catch (e) {
-      setMsg(e.message);
+      push(e.message || "Order failed", "error");
     }
   };
 
@@ -37,7 +53,12 @@ export default function ProductPage() {
           <img
             src={p.image_url}
             alt={p.title}
-            style={{ width: 220, height: 220, objectFit: "cover", borderRadius: 12 }}
+            style={{
+              width: 220,
+              height: 220,
+              objectFit: "cover",
+              borderRadius: 12,
+            }}
           />
         )}
         <div>
@@ -53,7 +74,9 @@ export default function ProductPage() {
         {newListings.map((l) => (
           <div className="card" key={l.id}>
             <div className="price">₹{l.price}</div>
-            <button onClick={() => buy(l.id)} style={{ marginTop: 8 }}>Buy</button>
+            <button onClick={() => buy(l.id)} style={{ marginTop: 8 }}>
+              Buy
+            </button>
           </div>
         ))}
       </div>
@@ -61,12 +84,16 @@ export default function ProductPage() {
       <h3 style={{ marginTop: 28 }}>
         Pre-loved <span className="muted">(graded &amp; verified by Loop)</span>
       </h3>
-      {preLoved.length === 0 && <div className="muted">No pre-loved offers right now.</div>}
+      {preLoved.length === 0 && (
+        <div className="muted">No pre-loved offers right now.</div>
+      )}
       <div className="grid">
         {preLoved.map((l) => (
           <div className="card" key={l.id}>
             <div>
-              <span className={`badge grade-${l.grade}`}>Grade {l.grade ?? "?"}</span>
+              <span className={`badge grade-${l.grade}`}>
+                Grade {l.grade ?? "?"}
+              </span>
               <span className="badge src">{l.source.replaceAll("_", " ")}</span>
               {l.untouched && <span className="badge">UNOPENED</span>}
             </div>
@@ -77,7 +104,12 @@ export default function ProductPage() {
                     key={ph}
                     src={ph}
                     alt="condition"
-                    style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6 }}
+                    style={{
+                      width: 56,
+                      height: 56,
+                      objectFit: "cover",
+                      borderRadius: 6,
+                    }}
                   />
                 ))}
               </div>
@@ -86,15 +118,17 @@ export default function ProductPage() {
               <span className="price">₹{l.price}</span>
               <span className="mrp">₹{p.mrp}</span>
             </div>
-            <div className="row" style={{ marginTop: 8 }}>
+            <div className="card-actions">
               <button onClick={() => buy(l.id)}>Buy</button>
-              <Link to={`/unit/${l.unit_id}`} className="muted">Health Card →</Link>
+              <Link to={`/unit/${l.unit_id}`} className="button green">
+                Health Card
+              </Link>
             </div>
           </div>
         ))}
       </div>
 
-      {msg && <div className="success">{msg}</div>}
+      {/* toasts handled globally */}
     </div>
   );
 }

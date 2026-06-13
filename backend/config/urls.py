@@ -9,6 +9,7 @@ urlpatterns = [
     path("api/", include("marketplace.urls")),
     path("api/seller/", include("sellerportal.urls")),
     path("api/facility/", include("facility.urls")),
+    path("", include("greencredits.urls")),
 ]
 
 if not settings.USE_S3:

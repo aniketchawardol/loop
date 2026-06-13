@@ -11,16 +11,26 @@
   --radius: 10px;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
-a { color: var(--accent2); text-decoration: none; }
+a {
+  color: var(--accent2);
+  text-decoration: none;
+}
 
 .nav {
   display: flex;
@@ -30,14 +40,33 @@ a { color: var(--accent2); text-decoration: none; }
   background: var(--panel);
   border-bottom: 1px solid #2c3442;
 }
-.nav .brand { font-weight: 800; font-size: 18px; color: var(--accent); }
-.nav .spacer { flex: 1; }
-.nav a { color: var(--text); font-size: 14px; }
-.nav a.active { color: var(--accent); }
+.nav .brand {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--accent);
+}
+.nav .spacer {
+  flex: 1;
+}
+.nav a {
+  color: var(--text);
+  font-size: 14px;
+}
+.nav a.active {
+  color: var(--accent);
+}
 
-.page { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+.page {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
 
 .card {
   background: var(--panel);
@@ -45,7 +74,10 @@ a { color: var(--accent2); text-decoration: none; }
   border-radius: var(--radius);
   padding: 16px;
 }
-.card h3 { margin: 4px 0; font-size: 15px; }
+.card h3 {
+  margin: 4px 0;
+  font-size: 15px;
+}
 
 .badge {
   display: inline-block;
@@ -57,15 +89,42 @@ a { color: var(--accent2); text-decoration: none; }
   color: var(--muted);
   margin-right: 6px;
 }
-.badge.grade-A { background: #14532d; color: #86efac; }
-.badge.grade-B { background: #1e3a8a; color: #93c5fd; }
-.badge.grade-C { background: #713f12; color: #fde047; }
-.badge.grade-D { background: #7f1d1d; color: #fca5a5; }
-.badge.src { background: #312e81; color: #c7d2fe; }
+.badge.grade-A {
+  background: #14532d;
+  color: #86efac;
+}
+.badge.grade-B {
+  background: #1e3a8a;
+  color: #93c5fd;
+}
+.badge.grade-C {
+  background: #713f12;
+  color: #fde047;
+}
+.badge.grade-D {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+.badge.src {
+  background: #312e81;
+  color: #c7d2fe;
+}
 
-.price { font-size: 18px; font-weight: 800; color: var(--accent); }
-.mrp { color: var(--muted); text-decoration: line-through; font-size: 13px; margin-left: 6px; }
-.muted { color: var(--muted); font-size: 13px; }
+.price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.mrp {
+  color: var(--muted);
+  text-decoration: line-through;
+  font-size: 13px;
+  margin-left: 6px;
+}
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
 
 button {
   background: var(--accent);
@@ -77,11 +136,75 @@ button {
   cursor: pointer;
   font-size: 14px;
 }
-button.secondary { background: var(--panel2); color: var(--text); }
-button.danger { background: var(--danger); color: #2d0707; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.secondary {
+  background: var(--panel2);
+  color: var(--text);
+}
+button.danger {
+  background: var(--danger);
+  color: #2d0707;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-input, select {
+/* Action buttons inside cards: make both buttons share full width */
+.card .card-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 12px;
+}
+.card .card-actions > * {
+  flex: 1;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+}
+.card .card-actions a.button,
+.card .card-actions button {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Ensure anchor elements styled as buttons get the same look */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  cursor: pointer;
+}
+.button.green,
+.button.green:visited {
+  background: #16a34a;
+  color: #fff;
+}
+
+/* Green variant for health button */
+.button.green,
+.button.green:visited {
+  background: var(--ok);
+  color: #052e16;
+}
+
+/* Utility to disable hover/active visuals for non-clickable cards (toasts etc) */
+.anim-root .no-hover:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.anim-root .no-hover:active {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+input,
+select {
   background: var(--panel2);
   border: 1px solid #2c3442;
   color: var(--text);
@@ -90,28 +213,146 @@ input, select {
   font-size: 14px;
   width: 100%;
 }
-label { display: block; margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
+label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
 
-.form { max-width: 380px; margin: 60px auto; }
-.error { color: var(--danger); font-size: 13px; margin-top: 8px; }
-.success { color: var(--ok); font-size: 13px; margin-top: 8px; }
+.form {
+  max-width: 380px;
+  margin: 60px auto;
+}
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 8px;
+}
+.success {
+  color: var(--ok);
+  font-size: 13px;
+  margin-top: 8px;
+}
 
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #2c3442; }
-th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th,
+td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #2c3442;
+}
+th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
 
-.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.right { margin-left: auto; }
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.right {
+  margin-left: auto;
+}
 
 .ratio-bar {
-  height: 8px; border-radius: 4px; background: var(--panel2);
-  overflow: hidden; min-width: 120px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--panel2);
+  overflow: hidden;
+  min-width: 120px;
 }
-.ratio-fill { height: 100%; background: linear-gradient(90deg, var(--ok), var(--accent), var(--danger)); }
+.ratio-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ok), var(--accent), var(--danger));
+}
 
-.timeline { list-style: none; padding: 0; margin: 0; }
-.timeline li { padding: 8px 0 8px 18px; border-left: 2px solid #2c3442; position: relative; font-size: 13px; }
-.timeline li::before {
-  content: ""; position: absolute; left: -5px; top: 13px;
-  width: 8px; height: 8px; border-radius: 50%; background: var(--accent2);
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
+.timeline li {
+  padding: 8px 0 8px 18px;
+  border-left: 2px solid #2c3442;
+  position: relative;
+  font-size: 13px;
+}
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 13px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent2);
+}
+
+/* Animation utility applied by adding the class 'anim-root' to the root element. */
+.anim-root button,
+.anim-root a,
+.anim-root .card {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    opacity 160ms ease;
+}
+.anim-root button:hover,
+.anim-root a:hover,
+.anim-root .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+}
+.anim-root button:active,
+.anim-root a:active,
+.anim-root .card:active {
+  transform: translateY(0);
+  opacity: 0.92;
+}
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, #1b2026, #232a37, #1b2026);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: -200% 0%;
+  }
+}
+
+/* Preloaders for listing cards */
+.card.skeleton {
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+.card.skeleton .thumb {
+  height: 110px;
+  border-radius: 8px;
+}
+.card.skeleton .line {
+  height: 12px;
+  width: 80%;
+  border-radius: 6px;
+}
+.card.skeleton .line.short {
+  width: 40%;
+}
+
+/* remove emoji-specific styles - icons used instead */

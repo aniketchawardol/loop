@@ -109,3 +109,103 @@ def price(product_id, mrp, grade_letter):
     except Exception:  # noqa: BLE001
         log.exception("AI price call failed; using mock fallback")
         return _mock_price(mrp, grade_letter)
+
+
+def route(product_id, grade, grade_confidence, est_value, mrp, untouched=False, storage_cost=0, category=None):
+    """Return routing recommendation for a unit.
+    Deterministic mock policy when AI_MOCK is enabled; otherwise this
+    function could call an external model. Returns dict with recommendation,
+    confidence, reasoning, alternatives.
+    """
+    try:
+        recovery_pct = 0
+        if mrp and mrp > 0:
+            recovery_pct = int((est_value or 0) * 100 / mrp)
+    except Exception:
+        recovery_pct = 0
+
+    # Basic deterministic policy matching NEW_FEATURES.md
+    if untouched and grade == "A":
+        return {
+            "recommendation": "RELIST",
+            "confidence": 0.95,
+            "reasoning": "Unopened, Grade A — immediate resale at near-full value",
+            "alternatives": ["REFURBISH", "DONATE"],
+            "source": "mock",
+        }
+
+    if grade in ("A", "B") and recovery_pct >= 55:
+        return {
+            "recommendation": "RELIST",
+            "confidence": 0.88,
+            "reasoning": "Good condition, strong recovery potential",
+            "alternatives": ["REFURBISH"],
+            "source": "mock",
+        }
+
+    if grade == "C" and recovery_pct >= 30:
+        return {
+            "recommendation": "REFURBISH",
+            "confidence": 0.8,
+            "reasoning": "Moderate wear — refurbishment unlocks higher resale",
+            "alternatives": ["RELIST", "DONATE"],
+            "source": "mock",
+        }
+
+    if grade == "D" or recovery_pct < 15:
+        return {
+            "recommendation": "LIQUIDATE",
+            "confidence": 0.9,
+            "reasoning": "Condition too low for viable resale",
+            "alternatives": ["DONATE"],
+            "source": "mock",
+        }
+
+    if est_value and mrp and est_value < 200 and grade in ("C", "D"):
+        return {
+            "recommendation": "DONATE",
+            "confidence": 0.7,
+            "reasoning": "Low value item — donation provides green credits and social benefit",
+            "alternatives": ["LIQUIDATE"],
+            "source": "mock",
+        }
+
+    if storage_cost and est_value and (storage_cost / max(est_value, 1)) > 0.7:
+        return {
+            "recommendation": "LIQUIDATE",
+            "confidence": 0.85,
+            "reasoning": "Storage cost approaching item value — cut losses",
+            "alternatives": ["DONATE"],
+            "source": "mock",
+        }
+
+    # Fallback: relist
+    return {
+        "recommendation": "RELIST",
+        "confidence": 0.6,
+        "reasoning": "Default: attempt resale",
+        "alternatives": ["REFURBISH", "DONATE"],
+        "source": "mock",
+    }
+
+
+def fit_check(product_id, category):
+    """Return a fit hint for product categories where fit matters.
+    Deterministic mock based on product_id hash so results are stable.
+    Returns {hint, confidence} or {hint: None}.
+    """
+    if category is None:
+        return {"hint": None}
+    h = _stable_int(f"fit:{product_id}") % 100
+    if category.lower() == "footwear":
+        # Runs small / big depending on hash
+        if h % 2 == 0:
+            return {"hint": "Runs small — 78% of buyers with similar profiles chose one size up.", "confidence": 0.78, "source": "mock"}
+        else:
+            return {"hint": "Comfortable on average — most buyers reported true-to-size fit.", "confidence": 0.65, "source": "mock"}
+    if category.lower() in ("apparel", "clothing"):
+        if h % 3 == 0:
+            return {"hint": "Slim fit — consider sizing up if you prefer a relaxed fit.", "confidence": 0.72, "source": "mock"}
+        return {"hint": None}
+    # Electronics and others: no fit hint
+    return {"hint": None}

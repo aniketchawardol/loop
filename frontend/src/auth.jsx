@@ -7,8 +7,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const reload = async () => {
+    try {
+      const d = await api.get("/auth/me");
+      setUser(d.user);
+      return d.user;
+    } catch (e) {
+      // ignore
+    }
+  };
+
   useEffect(() => {
-    api.get("/auth/me")
+    api
+      .get("/auth/me")
       .then((d) => setUser(d.user))
       .finally(() => setLoading(false));
   }, []);
@@ -29,7 +40,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, loading, login, register, logout }}>
+    <AuthCtx.Provider
+      value={{ user, loading, login, register, logout, reload }}
+    >
       {children}
     </AuthCtx.Provider>
   );

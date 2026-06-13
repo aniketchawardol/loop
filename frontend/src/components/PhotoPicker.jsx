@@ -11,7 +11,7 @@ export default function PhotoPicker({ files, onChange }) {
     setErr("");
     const next = [...files, ...Array.from(list)].slice(0, MAX);
     const bad = next.find(
-      (f) => !/\.(jpe?g|png|webp)$/i.test(f.name) || f.size > 8 * 1024 * 1024
+      (f) => !/\.(jpe?g|png|webp)$/i.test(f.name) || f.size > 8 * 1024 * 1024,
     );
     if (bad) {
       setErr(`${bad.name}: jpg/png/webp only, max 8 MB`);
@@ -30,19 +30,31 @@ export default function PhotoPicker({ files, onChange }) {
             <img
               src={URL.createObjectURL(f)}
               alt={f.name}
-              style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8 }}
+              style={{
+                width: 64,
+                height: 64,
+                objectFit: "cover",
+                borderRadius: 8,
+              }}
             />
             <button
               type="button"
               className="danger"
+              aria-label="remove photo"
               onClick={() => remove(i)}
               style={{
-                position: "absolute", top: -6, right: -6,
-                width: 20, height: 20, padding: 0, borderRadius: "50%",
-                fontSize: 11, lineHeight: "20px",
+                position: "absolute",
+                top: -6,
+                right: -6,
+                width: 20,
+                height: 20,
+                padding: 0,
+                borderRadius: "50%",
+                fontSize: 11,
+                lineHeight: "20px",
               }}
             >
-              ×
+              <span aria-hidden>Remove</span>
             </button>
           </div>
         ))}
@@ -51,10 +63,10 @@ export default function PhotoPicker({ files, onChange }) {
             type="button"
             className="secondary"
             onClick={() => inputRef.current?.click()}
-            style={{ width: 64, height: 64, fontSize: 22 }}
+            style={{ width: 64, height: 64 }}
             title="Add photos"
           >
-            📷
+            Add
           </button>
         )}
       </div>
@@ -64,7 +76,10 @@ export default function PhotoPicker({ files, onChange }) {
         accept="image/jpeg,image/png,image/webp"
         multiple
         hidden
-        onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }}
+        onChange={(e) => {
+          addFiles(e.target.files);
+          e.target.value = "";
+        }}
       />
       {err && <div className="error">{err}</div>}
       <div className="muted" style={{ marginTop: 4 }}>

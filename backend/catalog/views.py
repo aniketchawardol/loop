@@ -6,6 +6,8 @@ from rest_framework.response import Response
 
 from .models import ItemUnit, Product
 from .serializers import ItemUnitSerializer, ProductSerializer
+from marketplace.serializers import ListingSerializer
+from marketplace.models import Listing
 
 
 @api_view(["GET"])
@@ -29,9 +31,6 @@ def product_detail(request, pk):
     except Product.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    from marketplace.models import Listing
-    from marketplace.serializers import ListingSerializer
-
     listings = Listing.objects.filter(
         unit__product=product, state="ACTIVE"
     ).select_related("unit")
@@ -49,3 +48,37 @@ def unit_health_card(request, pk):
     except ItemUnit.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     return Response(ItemUnitSerializer(unit).data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def preloved_list(request):
+    """Return active pre-loved listings (source != NEW)."""
+    qs = Listing.objects.filter(state="ACTIVE").exclude(source=Listing.Sources.NEW if hasattr(Listing, 'Sources') else "NEW").select_related('unit__product').order_by('-created_at')
+    # Allow filters
+    category = request.query_params.get('category')
+    grade = request.query_params.get('grade')
+    q = request.query_params.get('q')
+    if category:
+        qs = qs.filter(unit__product__category=category)
+    if grade:
+        qs = qs.filter(unit__grade=grade)
+    if q:
+        from django.db.models import Q
+
+        qs = qs.filter(Q(unit__product__title__icontains=q) | Q(unit__product__description__icontains=q))
+    return Response(ListingSerializer(qs[:60], many=True).data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def product_fitcheck(request, pk):
+    try:
+        product = Product.objects.get(pk=pk)
+    except Product.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    try:
+        res = ai.fit_check(product.id, product.category)
+        return Response(res)
+    except Exception:
+        return Response({"hint": None})

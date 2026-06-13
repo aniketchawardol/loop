@@ -9,6 +9,7 @@ from core.permissions import IsSeller
 from core.uploads import validate_image
 from marketplace.models import Listing, ListingSources
 from services import ai
+from greencredits.logic import award_credits
 
 from .models import RuleActions, SellerRule
 from .serializers import SellerRuleSerializer
@@ -127,6 +128,9 @@ def apply_action(request):
     except ItemUnit.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     APPLY_ACTION[action](unit, request.user)
+    # Green credits: if seller donates the unit, award credits
+    if action == RuleActions.DONATE:
+        award_credits(request.user, 15, "SELLER_DONATE", f"Donated {unit.product.title}", unit.id)
     return Response(ItemUnitSerializer(unit).data)
 
 
